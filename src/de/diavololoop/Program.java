@@ -2,23 +2,19 @@ package de.diavololoop;
 
 import de.diavololoop.gui.GUI;
 import de.diavololoop.io.EncryptedFileTile;
-import de.diavololoop.io.FileSynchronizer;
 import de.diavololoop.io.FileUtil;
-import de.diavololoop.io.SystemWatcher;
 import de.diavololoop.security.SecurityProvider;
-import de.diavololoop.security.SunSecurityProvider;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import java.io.File;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.security.GeneralSecurityException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collector;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**

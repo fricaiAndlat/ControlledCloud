@@ -1,7 +1,6 @@
 package de.diavololoop.security;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 

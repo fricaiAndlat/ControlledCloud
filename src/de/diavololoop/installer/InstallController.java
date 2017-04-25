@@ -1,20 +1,17 @@
 package de.diavololoop.installer;
 
 import de.diavololoop.Setting;
+import de.diavololoop.io.FileUtil;
+import de.diavololoop.util.Util;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.security.SecureRandom;
 
 /**
  * Created by Peer on 22.04.2017.
@@ -29,6 +26,7 @@ public class InstallController {
     @FXML Button btnNextTarget;
     @FXML Button btnNextFolders;
     @FXML RadioButton chkLicense;
+    @FXML CheckBox chkAutostart;
     @FXML TextField fldDestination;
     @FXML TextField fldCloudPath;
     @FXML TextField fldLocalPath;
@@ -133,48 +131,101 @@ public class InstallController {
 
     }
 
+    public void onError(String error, Exception e){
+
+    }
+
     @FXML
     public void onInstall(){
 
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] tokenBytes = new byte[32];
+        secureRandom.nextBytes(tokenBytes);
+        String token = Util.toHex(tokenBytes);
+
+        File programRoot = new File(fldDestination.getText());
+        programRoot.mkdirs();
+
+        Setting setting = new Setting();
+        setting.localDirectory = new File( fldLocalPath.getText() );
+        setting.cloudDirectory = new File( fldCloudPath.getText() );
+        setting.tempDirectory = new File(setting.localDirectory, ".temp");
+
+        File settingFile = new File(programRoot, "setting");
+
+        setting.save(settingFile);
+
+        //writing bash start script
         try {
-
-            URL url = InstallController.class.getProtectionDomain().getCodeSource().getLocation();
-            File codeBase = new File(url.toURI());
-            System.out.println(codeBase);
-
-            File programRoot = new File(fldDestination.getText());
-            programRoot.mkdirs();
-
-            Setting setting = new Setting();
-            setting.localDirectory = new File( fldLocalPath.getText() );
-            setting.cloudDirectory = new File( fldCloudPath.getText() );
-            setting.tempDirectory = new File(setting.localDirectory, ".temp");
-
-            File settingFile = new File(programRoot, "setting");
-
-            setting.save(settingFile);
-
-            //copy binary
-            InputStream input = InstallController.class.getResourceAsStream("../../file/ControlledCloud.jar");
-            FileOutputStream output = new FileOutputStream(new File(programRoot, "ControlledCloud.jar"));
-
-            int len;
-            byte[] buffer = new byte[1024];
-            while(-1 != (len = input.read(buffer))){
-                output.write(buffer, 0, len);
-            }
-            input.close();
+            FileWriter output = new FileWriter(new File(programRoot, "start.sh"));
+            output.write("\"");
+            output.write(System.getProperty("java.home"));
+            output.write("/bin/javaw\" de.diavololoop.Program ");
+            output.write(token);
+            output.write(" \"");
+            output.write(programRoot.getAbsolutePath());
+            output.write("\"\n");
             output.flush();
             output.close();
 
+        } catch (IOException e) {
+            onError("Error while writing startscript", e);
+        }
 
+        try {
+            FileWriter output = new FileWriter(new File(programRoot, "start.bat"));
+            output.write("\"");
+            output.write(System.getProperty("java.home"));
+            output.write("\\bin\\javaw.exe\" de.diavololoop.Program ");
+            output.write(token);
+            output.write(" \"");
+            output.write(programRoot.getAbsolutePath());
+            output.write("\"\n");
+            output.flush();
+            output.close();
 
+        } catch (IOException e) {
+            onError("Error while writing startscript", e);
+        }
 
-        } catch (URISyntaxException e) {
+        if(chkAutostart.isSelected() && System.getProperty("os.name").matches(".*[wW]indows.*")){
+            try {
+                FileWriter output = new FileWriter(new File(programRoot, "start.bat"));
+                output.write("\"");
+                output.write(System.getProperty("java.home"));
+                output.write("\\bin\\javaw.exe\" de.diavololoop.Program ");
+                output.write(token);
+                output.write(" \"");
+                output.write(programRoot.getAbsolutePath());
+                output.write("\"\n");
+                output.flush();
+                output.close();
+
+            } catch (IOException e) {
+                onError("Error while writing startscript", e);
+            }
+        }
+
+        try {
+            FileUtil.copyClassToFile("de.diavololoop.gui.GUI", programRoot);
+            FileUtil.copyClassToFile("de.diavololoop.io.EncryptedFileTile", programRoot);
+            FileUtil.copyClassToFile("de.diavololoop.io.FileUtil", programRoot);
+            FileUtil.copyClassToFile("de.diavololoop.security.SecurityProvider", programRoot);
+            FileUtil.copyClassToFile("de.diavololoop.security.SunSecurityProvider", programRoot);
+            FileUtil.copyClassToFile("de.diavololoop.util.Util", programRoot);
+            FileUtil.copyClassToFile("de.diavololoop.Program", programRoot);
+            FileUtil.copyClassToFile("de.diavololoop.Setting", programRoot);
+
+            File iconDir = new File(programRoot, "icon");
+            FileUtil.copyRessourceToFile("../../../icon/icon64.png", new File(iconDir, "icon64.png"));
+            FileUtil.copyRessourceToFile("../../../icon/icon128.png", new File(iconDir, "icon128.png"));
+            FileUtil.copyRessourceToFile("../../../icon/icon256.png", new File(iconDir, "icon256.png"));
+        } catch (IOException e) {
             e.printStackTrace();
-        } catch (java.io.IOException e) {
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+
     }
 
     @FXML

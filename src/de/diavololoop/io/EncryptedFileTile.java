@@ -2,6 +2,7 @@ package de.diavololoop.io;
 
 import de.diavololoop.Program;
 import de.diavololoop.security.SecurityProvider;
+import de.diavololoop.util.Util;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -344,17 +345,9 @@ public class EncryptedFileTile {
         }
     }
 
-    private final static byte[] hexChars = {48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70};
     private static String createHashHex(String string){
         byte[] hashBytes = SecurityProvider.sha256(string.getBytes(StandardCharsets.UTF_8));
-        byte[] asciiHex = new byte[hashBytes.length * 2];
-
-        for(int i = 0; i < hashBytes.length; ++i){
-            asciiHex[2*i]   = hexChars[  (hashBytes[i] >> 4)&0xF  ];
-            asciiHex[2*i+1] = hexChars[   hashBytes[i]      &0xF  ];
-        }
-
-        return new String(asciiHex, StandardCharsets.US_ASCII);
+        return Util.toHex(hashBytes);
      }
 
     public String getFilePath() {

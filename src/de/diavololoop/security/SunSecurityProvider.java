@@ -1,20 +1,19 @@
 package de.diavololoop.security;
 
 import de.diavololoop.Program;
+import de.diavololoop.util.Util;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.spec.KeySpec;
 import java.util.Map;
 
 /**
@@ -30,7 +29,7 @@ public class SunSecurityProvider extends SecurityProvider {
         removeCryptographyRestrictions();
 
         random = new SecureRandom();
-        key = new SecretKeySpec(sha256( token.getBytes(StandardCharsets.UTF_8 )), "AES");
+        key = new SecretKeySpec(Util.fromHex(token), "AES");
     }
 
     @Override
